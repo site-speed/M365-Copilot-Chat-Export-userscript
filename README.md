@@ -1,8 +1,8 @@
-# M365 Copilot Chat Exporter
+# M365 Copilot Chat Conversation Exporter
 
 A Tampermonkey/Violentmonkey userscript for exporting **M365 Copilot Chat** conversations from the Microsoft 365 work/school chat experience.
 
-Version: **1.0.1**  
+Version: **1.0.2**  
 Public repo: https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
 
 This tool targets the Microsoft 365 business/work/school version of Copilot Chat at:
@@ -15,7 +15,7 @@ It is **not** intended primarily for the personal Microsoft Copilot Chat experie
 
 ## UI preview
 
-![M365 Copilot Chat Exporter UI](assets/screenshot-ui.png)
+![M365 Copilot Chat Conversation Exporter UI](assets/screenshot-ui.png)
 
 The screenshot is redacted and shows the floating exporter panel in the M365 Copilot Chat web UI.
 

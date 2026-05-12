@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         M365 Copilot Chat Exporter
+// @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.1
+// @version      1.0.2
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.1";
+  const SCRIPT_VERSION = "1.0.2";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // ====================
@@ -4100,7 +4100,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = `M365 Copilot Chat Export v${SCRIPT_VERSION}`;
+    title.textContent = `M365 Copilot Chat Conversation Export v${SCRIPT_VERSION}`;
     title.style.cssText = "font-weight:700;color:#9d8aff;margin-bottom:6px;";
 
     const status = document.createElement("div");
