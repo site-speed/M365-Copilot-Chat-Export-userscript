@@ -2,7 +2,7 @@
 
 A Tampermonkey/Violentmonkey userscript for exporting **M365 Copilot Chat** conversations from the Microsoft 365 work/school chat experience.
 
-Version: **1.0.3**  
+Version: **1.0.5**  
 Public repo: https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
 
 This tool targets the Microsoft 365 business/work/school version of Copilot Chat at:
@@ -38,6 +38,11 @@ Install from GreasyFork:
 ```text
 https://greasyfork.org/en/scripts/577806-m365-copilot-chat-conversation-exporter
 ```
+
+
+### GreasyFork
+
+GreasyFork is the intended primary install surface for the first public release. Once the GreasyFork listing is live, install from that listing.
 
 ### GitHub raw URL
 
