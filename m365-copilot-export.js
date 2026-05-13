@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.9
+// @version      1.0.12
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.9";
+  const SCRIPT_VERSION = "1.0.12";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // ====================
@@ -27,8 +27,9 @@
   const ADD_RULE_BETWEEN_BLOCKS = true;
   const COLLAPSE_DUP_STATUS = true;
 
-  // Only hiddenText remains user-toggleable
+  // Unclassified-record export evidence is exposed as one user-facing master switch.
   const DEFAULTS = {
+    includeUnclassifiedRecords: true,
     includeHiddenText: true,
     includePluginProvenance: true,
     includeUnknownRecords: true,
@@ -54,6 +55,22 @@
   }
 
   let settings = loadSettings();
+
+  function applyUnclassifiedRecordSetting(enabled) {
+    const value = !!enabled;
+    settings.includeUnclassifiedRecords = value;
+    settings.includeHiddenText = value;
+    settings.includePluginProvenance = value;
+    settings.includeUnknownRecords = value;
+    saveSettings(settings);
+  }
+
+  function setExportOptions(options = {}) {
+    if (Object.prototype.hasOwnProperty.call(options, "includeUnclassifiedRecords")) {
+      applyUnclassifiedRecordSetting(options.includeUnclassifiedRecords);
+    }
+    return { includeUnclassifiedRecords: settings.includeUnclassifiedRecords, includeHiddenText: settings.includeHiddenText, includePluginProvenance: settings.includePluginProvenance, includeUnknownRecords: settings.includeUnknownRecords };
+  }
 
   // ====================
   // Config
@@ -3551,9 +3568,9 @@
     return turns;
   }
 
-  function toMarkdownCardFirst(conversationJson) {
+  function toMarkdownCardFirst(conversationJson, exportedAt = new Date().toISOString()) {
     const title = conversationJson?.chatName || "M365 Copilot Chat";
-    const exported = new Date().toISOString();
+    const exported = exportedAt;
     const srcUrl = location.href;
     const turns = composeTurnAwareTurns(conversationJson);
     const groups = groupContiguous(turns);
@@ -3593,9 +3610,9 @@
     );
   }
 
-  function toRawJsonMarkdown(conversationJson) {
+  function toRawJsonMarkdown(conversationJson, exportedAt = new Date().toISOString()) {
     const title = conversationJson?.chatName || "M365 Copilot Chat";
-    const exported = new Date().toISOString();
+    const exported = exportedAt;
     const srcUrl = location.href;
     const lines = [];
     lines.push(`# ${title}`);
@@ -4122,46 +4139,20 @@
     optTitle.textContent = "Readable Markdown details";
     optTitle.style.cssText = "font-weight:700;color:#8be9fd;margin-bottom:6px;";
 
-    const { row: rowHidden, cb: cbHidden } = createCheckbox(
-      "m365ce-opt-hidden",
-      "HiddenText fallback details",
-      settings.includeHiddenText,
+    const includeUnclassifiedRecords = settings.includeHiddenText !== false && settings.includePluginProvenance !== false && settings.includeUnknownRecords !== false;
+    const { row: rowUnclassified, cb: cbUnclassified } = createCheckbox(
+      "m365ce-opt-unclassified-records",
+      "Include unclassified records",
+      includeUnclassifiedRecords,
     );
 
-    const { row: rowPlugin, cb: cbPlugin } = createCheckbox(
-      "m365ce-opt-plugin-provenance",
-      "Plugin usage provenance",
-      settings.includePluginProvenance,
-    );
-
-    const { row: rowUnknown, cb: cbUnknown } = createCheckbox(
-      "m365ce-opt-unknown-records",
-      "Unknown/unclassified records",
-      settings.includeUnknownRecords,
-    );
-
-    cbHidden.addEventListener("change", () => {
-      settings.includeHiddenText = cbHidden.checked;
-      saveSettings(settings);
-      status.textContent = "";
-    });
-
-    cbPlugin.addEventListener("change", () => {
-      settings.includePluginProvenance = cbPlugin.checked;
-      saveSettings(settings);
-      status.textContent = "";
-    });
-
-    cbUnknown.addEventListener("change", () => {
-      settings.includeUnknownRecords = cbUnknown.checked;
-      saveSettings(settings);
+    cbUnclassified.addEventListener("change", () => {
+      applyUnclassifiedRecordSetting(cbUnclassified.checked);
       status.textContent = "";
     });
 
     opts.appendChild(optTitle);
-    opts.appendChild(rowHidden);
-    opts.appendChild(rowPlugin);
-    opts.appendChild(rowUnknown);
+    opts.appendChild(rowUnclassified);
 
     const btn = document.createElement("button");
     btn.textContent = "Export conversation → .md + .json.md";
@@ -4243,11 +4234,13 @@
         setStatus(
           `Building export files for: ${conv?.chatName || "current chat"}...`,
         );
-        const baseName = `${sanitizeFilename(conv.chatName || "m365-copilot-chat")}_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}`;
-        const readableMd = toMarkdownCardFirst(conv);
+        const exportedAt = new Date().toISOString();
+        const timestampForFilename = exportedAt.replace("T", "_").replace(/:/g, "-");
+        const baseName = `${sanitizeFilename(conv.chatName || "m365-copilot-chat")}_${timestampForFilename}`;
+        const readableMd = toMarkdownCardFirst(conv, exportedAt);
         downloadText(`${baseName}.md`, readableMd);
 
-        const rawMd = toRawJsonMarkdown(conv);
+        const rawMd = toRawJsonMarkdown(conv, exportedAt);
         downloadText(`${baseName}.json.md`, rawMd);
 
         setStatus("Exported ✔  (2 files: .md + .json.md)");
