@@ -1,6 +1,6 @@
-# M365 Copilot Chat Conversation Exporter v1.0.27
+# M365 Copilot Chat Conversation Exporter v1.0.28
 
-Documentation and release-metadata sync update for the userscript.
+Documentation and metadata-only update for the userscript.
 
 ## What it does
 
@@ -41,7 +41,6 @@ https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/issues
 
 ## Notes
 
-- Fixes public README version metadata so release checks recognise the current userscript version.
+- No userscript export-format or runtime behaviour changes.
 - Keeps the v1.0.26 Substrate URL hardening: passive network hooks use URL parsing and exact `substrate.office.com` hostname checks.
-- No export-format or runtime behaviour changes beyond version/metadata alignment.
 - Exported files may contain sensitive work data and should be handled carefully.
