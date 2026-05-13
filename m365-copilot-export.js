@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.14
+// @version      1.0.20
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,12 +18,12 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.14";
+  const SCRIPT_VERSION = "1.0.20";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
-  // ====================
+  // --------------------
   // Renderer invariants (v1)
-  // ====================
+  // --------------------
   const ADD_RULE_BETWEEN_BLOCKS = true;
   const COLLAPSE_DUP_STATUS = true;
 
@@ -76,9 +76,9 @@
     return { includeUnclassifiedRecords: settings.includeUnclassifiedRecords, includeHiddenText: settings.includeHiddenText, includePluginProvenance: settings.includePluginProvenance, includeUnknownRecords: settings.includeUnknownRecords };
   }
 
-  // ====================
+  // --------------------
   // Config
-  // ====================
+  // --------------------
   const SUBSTRATE_BASE = "https://substrate.office.com/m365Copilot";
 
   let lastConversation = null;
@@ -89,9 +89,9 @@
   let currentStatusConversationId = null;
   const exportedConversationIds = new Set();
 
-  // ====================
+  // --------------------
   // Current chat tracking / UI
-  // ====================
+  // --------------------
 
   function cacheConversationSummary(conv) {
     if (!conv?.conversationId) {
@@ -230,9 +230,9 @@
     updateCurrentChatInfo();
   }
 
-  // ====================
+  // --------------------
   // Helpers
-  // ====================
+  // --------------------
   function sanitizeFilename(name) {
     const safe = (name || "copilot-chat")
       .replace(/[\x00-\x1F\x7F]/g, "")
@@ -492,9 +492,9 @@
     return lines.filter((l) => l !== "").join("\n");
   }
 
-  // ====================
+  // --------------------
   // Status line handling
-  // ====================
+  // --------------------
   const STATUS_TOKENS = new Set([
     "Reviewing the data...",
     "Thinking...",
@@ -538,9 +538,9 @@
     return out.join("\n");
   }
 
-  // ====================
+  // --------------------
   // Reasoning step formatting (optional)
-  // ====================
+  // --------------------
   // Converts sequences like:
   //   *Step title* Some body text...
   // into:
@@ -551,9 +551,9 @@
     return text;
   }
 
-  // ====================
+  // --------------------
   // System-ish italics (outside code fences)
-  // ====================
+  // --------------------
   const SYSTEM_LINE_EXACT = new Set([
     "Reviewing the data...",
     "Thinking...",
@@ -675,11 +675,11 @@
     return out;
   }
 
-  // ====================
+  // --------------------
   // Active rendering helpers
   // v0.1.25: F02 fix — do not collapse repeated 'Coding and executing' lines; distinct tool runs are preserved per turn.
   // Active rendering helpers (v0.1.23)
-  // ====================
+  // --------------------
 
   function repairSplitMarkdownHeadingContinuations(text) {
     if (!text) {
@@ -1366,9 +1366,9 @@
       .trim();
   }
 
-  // ====================
+  // --------------------
   // Copilot body Markdown hardening (viewer safety)
-  // ====================
+  // --------------------
   function normalizeCopilotBodyMarkdown(md) {
     const text = String(md || "");
     if (!text) return "";
@@ -1435,9 +1435,9 @@
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
-  // ====================
+  // --------------------
   // Uploaded filename derivation
-  // ====================
+  // --------------------
   const LOCAL_FILE_ANNOTATION_TYPES = new Set(["LocalFile"]);
 
   function normalizeUploadedFilenameCandidate(value) {
@@ -1734,9 +1734,9 @@
       .slice(0, 6);
   }
 
-  // ====================
+  // --------------------
   // Rich extraction
-  // ====================
+  // --------------------
   function groupContiguous(turns) {
     return (turns || []).map((t) => ({ role: t.role, items: [t] }));
   }
