@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.22
+// @version      1.0.27
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.22";
+  const SCRIPT_VERSION = "1.0.27";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // --------------------
@@ -3870,20 +3870,8 @@
         continue;
       }
       audiences.push({ key: entry.key, storage: entry.storage, aud: jwt.aud });
-      console.debug(
-        "[M365 Export] Candidate token audience",
-        jwt.aud,
-        "from",
-        entry.storage,
-        entry.key,
-      );
 
       if (jwt.aud === targetAud) {
-        console.debug(
-          "[M365 Export] Selected Substrate token from",
-          entry.storage,
-          entry.key,
-        );
         return {
           token: parsed.secret,
           tokenPayload: jwt,
@@ -4008,6 +3996,16 @@
     return null;
   }
 
+
+  function isSubstrateGetConversationUrl(rawUrl) {
+    try {
+      const parsedUrl = new URL(String(rawUrl || ""), location.href);
+      return parsedUrl.hostname === "substrate.office.com" && parsedUrl.pathname.includes("GetConversation");
+    } catch {
+      return false;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Passive interception
   // ---------------------------------------------------------------------------
@@ -4017,10 +4015,7 @@
     const url = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
     const response = await originalFetch.apply(this, args);
 
-    if (
-      url.includes("GetConversation") &&
-      url.includes("substrate.office.com")
-    ) {
+    if (isSubstrateGetConversationUrl(url)) {
       try {
         const clone = response.clone();
         const text = await clone.text();
@@ -4051,10 +4046,7 @@
     this.addEventListener("load", function () {
       try {
         const url = this._m365ce_url || "";
-        if (
-          url.includes("GetConversation") &&
-          url.includes("substrate.office.com")
-        ) {
+        if (isSubstrateGetConversationUrl(url)) {
           const json = JSON.parse(this.responseText);
           if (json?.conversationId) {
             lastConversation = json;

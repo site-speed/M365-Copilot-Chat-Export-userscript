@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security or privacy concern
+    url: https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/security/policy
+    about: Please report security or privacy concerns privately using the security policy.
+  - name: General support
+    url: https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/issues
+    about: Use public issues for non-sensitive bugs, documentation corrections, and support questions.
