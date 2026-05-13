@@ -1,6 +1,6 @@
 # M365 Copilot Chat Conversation Exporter — Userscript
 
-Version: **v1.0.21**
+Version: **v1.0.22**
 
 Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 
@@ -19,7 +19,11 @@ The readable Markdown is designed to be compact and useful to humans. The raw JS
 
 ## Install
 
-The primary public install route is GreasyFork.
+Install from GreasyFork:
+
+```text
+https://greasyfork.org/en/scripts/577806-m365-copilot-chat-conversation-exporter
+```
 
 Manual installation is also possible from the public GitHub userscript file:
 
@@ -64,6 +68,20 @@ Readable Markdown may include:
 
 Raw JSON Markdown includes the full conversation JSON payload wrapped in a Markdown file for easier storage and opening.
 
+## Source and support
+
+Source:
+
+```text
+https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
+```
+
+Issues:
+
+```text
+https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/issues
+```
+
 ## Privacy and data handling
 
 Exports are generated from your authenticated browser session and may contain sensitive organisation data, prompts, responses, citations, file names, and tool traces.
@@ -90,10 +108,13 @@ See `SECURITY.md` for supported-version and reporting guidance.
 
 ## Acknowledgements
 
-- Built and maintained by Tim Moss.
-- Thanks to the userscript manager ecosystem, including Tampermonkey and Violentmonkey, for making lightweight browser-based tools practical.
-- Thanks to the Markdown tools and strict Markdown viewers used during validation; their rendering differences helped uncover portability issues.
-- Microsoft 365 Copilot Chat is a Microsoft service. This exporter is an independent tool and is not affiliated with, endorsed by, or supported by Microsoft.
+Thanks to the following MIT-licensed userscript projects and authors that helped inform this work:
+
+- [ingo/m365-copilot-chat-exporter](https://github.com/ingo/m365-copilot-chat-exporter) by Ingo Muschenetz.
+- [ganyuke/copilot-exporter](https://github.com/ganyuke/copilot-exporter) by ganyuke.
+- [NoahTheGinger/Userscripts](https://github.com/NoahTheGinger/Userscripts) by NoahTheGinger.
+
+This project is MIT licensed.
 
 ## Licence
 
