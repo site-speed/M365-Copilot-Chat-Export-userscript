@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.12
+// @version      1.0.13
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.12";
+  const SCRIPT_VERSION = "1.0.13";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // ====================
@@ -55,6 +55,10 @@
   }
 
   let settings = loadSettings();
+
+  function currentUnclassifiedRecordSetting() {
+    return settings.includeUnclassifiedRecords !== false && settings.includeHiddenText !== false && settings.includePluginProvenance !== false && settings.includeUnknownRecords !== false;
+  }
 
   function applyUnclassifiedRecordSetting(enabled) {
     const value = !!enabled;
@@ -4139,12 +4143,7 @@
     optTitle.textContent = "Readable Markdown details";
     optTitle.style.cssText = "font-weight:700;color:#8be9fd;margin-bottom:6px;";
 
-    const includeUnclassifiedRecords = settings.includeHiddenText !== false && settings.includePluginProvenance !== false && settings.includeUnknownRecords !== false;
-    const { row: rowUnclassified, cb: cbUnclassified } = createCheckbox(
-      "m365ce-opt-unclassified-records",
-      "Include unclassified records",
-      includeUnclassifiedRecords,
-    );
+    const { row: rowUnclassified, cb: cbUnclassified } = createCheckbox("m365ce-opt-unclassified-records", "Include unclassified records", currentUnclassifiedRecordSetting());
 
     cbUnclassified.addEventListener("change", () => {
       applyUnclassifiedRecordSetting(cbUnclassified.checked);
@@ -4196,9 +4195,8 @@
       await new Promise((resolve) => setTimeout(resolve, 90));
       try {
         settings = loadSettings();
-        cbHidden.checked = settings.includeHiddenText;
-        cbPlugin.checked = settings.includePluginProvenance;
-        cbUnknown.checked = settings.includeUnknownRecords;
+        cbUnclassified.checked = currentUnclassifiedRecordSetting();
+        applyUnclassifiedRecordSetting(cbUnclassified.checked);
 
         status.textContent = "Preparing export files...";
         invalidateConversationCacheIfNeeded();
