@@ -1,6 +1,6 @@
 # M365 Copilot Chat Conversation Exporter — Userscript
 
-Version: **v1.0.28**
+Version: **v1.0.29**
 
 Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 
