@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version      1.0.30
+// @version 1.0.37
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.30";
+  const SCRIPT_VERSION = "1.0.37";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // --------------------
@@ -30,9 +30,6 @@
   // Unclassified-record export evidence is exposed as one user-facing master switch.
   const DEFAULTS = {
     includeUnclassifiedRecords: true,
-    includeHiddenText: true,
-    includePluginProvenance: true,
-    includeUnknownRecords: true,
   };
 
   function loadSettings() {
@@ -57,15 +54,11 @@
   let settings = loadSettings();
 
   function currentUnclassifiedRecordSetting() {
-    return settings.includeUnclassifiedRecords !== false && settings.includeHiddenText !== false && settings.includePluginProvenance !== false && settings.includeUnknownRecords !== false;
+    return settings.includeUnclassifiedRecords !== false;
   }
 
   function applyUnclassifiedRecordSetting(enabled) {
-    const value = !!enabled;
-    settings.includeUnclassifiedRecords = value;
-    settings.includeHiddenText = value;
-    settings.includePluginProvenance = value;
-    settings.includeUnknownRecords = value;
+    settings.includeUnclassifiedRecords = !!enabled;
     saveSettings(settings);
   }
 
@@ -73,7 +66,7 @@
     if (Object.prototype.hasOwnProperty.call(options, "includeUnclassifiedRecords")) {
       applyUnclassifiedRecordSetting(options.includeUnclassifiedRecords);
     }
-    return { includeUnclassifiedRecords: settings.includeUnclassifiedRecords, includeHiddenText: settings.includeHiddenText, includePluginProvenance: settings.includePluginProvenance, includeUnknownRecords: settings.includeUnknownRecords };
+    return { includeUnclassifiedRecords: settings.includeUnclassifiedRecords };
   }
 
   // --------------------
@@ -2685,9 +2678,6 @@
     return rendered ? [{ msgs: selected, msg: selected[0], rendered }] : [];
   }
   function renderPluginProvenanceSection(items, renderedSet) {
-    if (!settings.includePluginProvenance) {
-      return "";
-    }
     const pluginMessages = uniqBy(
       (items || []).filter(
         (m) =>
@@ -2982,6 +2972,13 @@
     return authorKey === "system" && mtKey === "attachmentaction" && coKey === "";
   }
 
+  function isKnownModelSelectorMessage(msg) {
+    const authorKey = String(msg?.author ?? "").trim().toLowerCase();
+    const mtKey = String(msg?.messageType ?? "").trim().toLowerCase();
+    const coKey = String(msg?.contentOrigin ?? "").trim().toLowerCase();
+    return authorKey === "system" && mtKey === "internal" && coKey === "modelselector";
+  }
+
   function isKnownNoiseMessage(msg) {
     if (!msg) {
       return true;
@@ -3016,6 +3013,9 @@
       return true;
     }
     if (isKnownSystemAttachmentActionMessage(msg)) {
+      return true;
+    }
+    if (isKnownModelSelectorMessage(msg)) {
       return true;
     }
     if (
@@ -3055,7 +3055,7 @@
   }
 
   function renderUnknownRecordsSection(items, renderedSet) {
-    if (!settings.includeUnknownRecords) {
+    if (!settings.includeUnclassifiedRecords) {
       return "";
     }
     const records = (items || []).filter((msg) => {
@@ -3069,7 +3069,6 @@
         return false;
       }
       if (
-        settings.includePluginProvenance &&
         msg.pluginInfo &&
         (msg.pluginInfo.id || msg.pluginInfo.source)
       ) {
@@ -3104,12 +3103,12 @@
   }
 
   function renderHiddenTextDetails(hiddenText) {
-    if (!settings.includeHiddenText || !hiddenText) return "";
+    if (!hiddenText) return "";
     return ["<details>", "<summary>hiddenText</summary>", "", renderFencedBlock(hiddenText, "text"), "</details>"].join("\n");
   }
 
   function shouldRenderHiddenText(msg, primary, hiddenText) {
-    if (!settings.includeHiddenText || !hiddenText) return false;
+    if (!hiddenText) return false;
     if (hiddenTextLooksLikeSearchInvocation(hiddenText)) return false;
     const mt = msg?.messageType ?? "";
     if (mt === "GeneratedCode" || mt === "Internal" || mt === "InvokeAction") return false;
