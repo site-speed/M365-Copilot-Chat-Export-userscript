@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version 1.0.37
+// @version 1.0.39
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.37";
+  const SCRIPT_VERSION = "1.0.39";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // --------------------
@@ -2205,6 +2205,34 @@
     return canonicalPluginId(msg) === "pythoncodeinterpreter";
   }
 
+  const CLASSIFIED_GENERIC_PLUGIN_IDS = new Set([
+    "updatetextdoc",
+  ]);
+
+  function hasPluginInfo(msg) {
+    return Boolean(msg?.pluginInfo && (msg.pluginInfo.id || msg.pluginInfo.source));
+  }
+
+  function isClassifiedPluginMessage(msg) {
+    if (!hasPluginInfo(msg)) {
+      return false;
+    }
+    if (
+      isPyexecPluginMessage(msg) ||
+      isUpdateMemoryPluginMessage(msg) ||
+      isFileUploadPluginMessage(msg) ||
+      isSearchProvenancePluginMessage(msg) ||
+      isPythonCodeInterpreterPluginMessage(msg)
+    ) {
+      return true;
+    }
+    return CLASSIFIED_GENERIC_PLUGIN_IDS.has(canonicalPluginId(msg));
+  }
+
+  function isUnclassifiedPluginMessage(msg) {
+    return hasPluginInfo(msg) && !isClassifiedPluginMessage(msg);
+  }
+
   function pluginEvidenceFullText(value) {
     if (value == null) {
       return "";
@@ -2683,6 +2711,7 @@
         (m) =>
           m?.pluginInfo &&
           (m.pluginInfo.id || m.pluginInfo.source) &&
+          isClassifiedPluginMessage(m) &&
           !isPyexecPluginMessage(m) &&
           !isSearchProvenancePluginMessage(m) &&
           !isFetchFileMessage(m) &&
@@ -2854,12 +2883,15 @@
   }
 
   function renderUnclassifiedContextSection(items) {
+    if (!settings.includeUnclassifiedRecords) {
+      return "";
+    }
     if (!(items || []).length) {
       return "";
     }
     return [
       "<details>",
-      `<summary>Unclassified context (${items.length})</summary>`,
+      `<summary>Unclassified content (${items.length})</summary>`,
       "",
       renderFencedBlock(JSON.stringify(items, null, 2), "json"),
       "</details>",
@@ -3051,7 +3083,8 @@
     const author = msg?.author || "unknown-author";
     const mt = msg?.messageType || "missing-messageType";
     const co = msg?.contentOrigin || "missing-contentOrigin";
-    return `${author} · ${mt} · ${co}`;
+    const plugin = hasPluginInfo(msg) ? pluginDisplayName(msg.pluginInfo) : "";
+    return plugin ? `${author} · ${mt} · ${co} · plugin: ${plugin}` : `${author} · ${mt} · ${co}`;
   }
 
   function renderUnknownRecordsSection(items, renderedSet) {
@@ -3068,10 +3101,7 @@
       if (isUnclassifiedContextMessage(msg)) {
         return false;
       }
-      if (
-        msg.pluginInfo &&
-        (msg.pluginInfo.id || msg.pluginInfo.source)
-      ) {
+      if (hasPluginInfo(msg) && isClassifiedPluginMessage(msg)) {
         return false;
       }
       if (isKnownNoiseMessage(msg)) {
@@ -3084,7 +3114,7 @@
     }
     const lines = [
       "<details>",
-      `<summary>Unknown/unclassified records (${records.length})</summary>`,
+      `<summary>Unclassified content (${records.length})</summary>`,
       "",
     ];
     for (const msg of records) {
@@ -3551,13 +3581,14 @@
           citations: [],
         });
       }
-      if (unclassifiedContextItems.length) {
+      const unclassifiedContextSection = renderUnclassifiedContextSection(unclassifiedContextItems);
+      if (unclassifiedContextSection) {
         turns.push({
           role: "Context",
           createdAt: unclassifiedContextItems[0]?.createdAt || null,
           turnCount: items[0]?.turnCount ?? null,
           sourceCount: 0,
-          text: renderUnclassifiedContextSection(unclassifiedContextItems),
+          text: unclassifiedContextSection,
           uploadedFiles: [],
           links: [],
           images: [],

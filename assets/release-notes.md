@@ -1,12 +1,12 @@
-# M365 Copilot Chat Conversation Exporter Userscript v1.0.37
+# M365 Copilot Chat Conversation Exporter v1.0.39
 
-This userscript release restores explicit GreasyFork install/update instructions in the public release notes.
+Maintenance release aligned with the extension popup recovery update.
 
 ## What it does
 
-The userscript exports the current Microsoft 365 Copilot Chat conversation as readable Markdown with a raw JSON Markdown companion backup.
+Exports the current Microsoft 365 work/school Copilot Chat conversation as readable Markdown and a raw JSON companion Markdown file.
 
-## Install for the userscript
+## Install
 
 Install from GreasyFork:
 
@@ -14,19 +14,16 @@ Install from GreasyFork:
 https://greasyfork.org/en/scripts/577806-m365-copilot-chat-conversation-exporter
 ```
 
-1. Open the GreasyFork page above in your browser.
-2. Click **Install this script** or **Update this script**.
-3. Confirm the install/update in your userscript manager, such as Tampermonkey or Violentmonkey.
-
-Manual installation is also possible from the public GitHub userscript file if needed.
-
 ## Source and support
 
-Source and issue reporting are available from the public userscript repository.
+Source and support are available from the public userscript repository:
+
+```text
+https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
+```
 
 ## Notes
 
-- Restored explicit GreasyFork install/update instructions and URL in the userscript release notes.
 - No userscript export-format or runtime behaviour changes.
-
-- Internal ModelSelector records are treated as known low-value metadata and excluded from readable Markdown fallback blocks.
+- Keeps the single Include unclassified records option for discovery evidence.
+- Exported files may contain sensitive work data and should be handled carefully.
