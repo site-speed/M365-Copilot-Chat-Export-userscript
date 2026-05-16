@@ -1,4 +1,4 @@
-# M365 Copilot Chat Conversation Exporter v1.0.39
+# M365 Copilot Chat Conversation Exporter v1.0.40
 
 Maintenance release aligned with the extension popup recovery update.
 
