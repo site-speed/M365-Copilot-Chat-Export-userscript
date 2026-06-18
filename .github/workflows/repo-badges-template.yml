@@ -1,0 +1,64 @@
+name: Update Repo Badges
+
+on:
+  # schedule:
+  #   - cron: '0 7 * * *' # runs daily at 07:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+jobs:
+  generate-badges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Generate Repository Badges
+        id: badges
+        uses: site-speed/site-speed/.github/actions/readme-badge-generator@main
+        with:
+          username: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          days: '30'
+          color: 'blue'
+          label_color: '555'
+    
+      - name: write to job summary
+        run: |
+          echo "${{ steps.badges.outputs.badges }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: add to readme
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          #!/bin/bash
+          set -euo pipefail
+
+          readme=README.md
+
+          # Define start and end markers (Add these to your README.md)
+          startMarker="<!-- start user badges -->"
+          endMarker="<!-- end user badges -->"
+
+          replacement="${{ steps.badges.outputs.badges }}"
+
+          # Escape special characters for perl
+          replacementEscaped=$(printf '%s\n' "$replacement" | perl -pe 's/([\\\/\$\(\)@])/\\$1/g')
+
+          # Replace content between markers
+          perl -i -pe "BEGIN{undef $/;} s/\Q$startMarker\E.*?\Q$endMarker\E/$startMarker\n$replacementEscaped\n$endMarker/smg" "$readme"
+
+          # Commit and push if changed
+          if [ -n "$(git status --porcelain)" ]; then
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add "$readme"
+            git commit -m "docs: update readme badges"
+            git push
+          fi
+        shell: bash
