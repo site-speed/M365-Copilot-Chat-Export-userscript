@@ -1,11 +1,15 @@
 # M365 Copilot Chat Conversation Exporter — Userscript
 
+[![GitHub Release](https://img.shields.io/github/v/release/site-speed/M365-Copilot-Chat-Export-userscript?style=flat&color=blue)](https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+![GitHub Repo stars](https://img.shields.io/github/stars/site-speed/M365-Copilot-Chat-Export-userscript)
+![Greasy Fork Rating](https://img.shields.io/greasyfork/rating-count/577806)
 <!-- start user badges -->
 ![PRs opened in last 30 days](https://img.shields.io/badge/PRs%20opened%20in%20last%2030%20days-0-green?labelColor=555) ![PRs closed in last 30 days](https://img.shields.io/badge/PRs%20closed%20in%20last%2030%20days-0-red?labelColor=555) ![Open PRs](https://img.shields.io/badge/Open%20PRs-0-blue?labelColor=555)
 
-![Issues opened in last 30 days](https://img.shields.io/badge/Issues%20opened%20in%20last%2030%20days-0-green?labelColor=555) ![Issues closed in last 30 days](https://img.shields.io/badge/Issues%20closed%20in%20last%2030%20days-0-red?labelColor=555) ![Open issues](https://img.shields.io/badge/Open%20issues-0-blue?labelColor=555)
+![Issues opened in last 30 days](https://img.shields.io/badge/Issues%20opened%20in%20last%2030%20days-8-green?labelColor=555) ![Issues closed in last 30 days](https://img.shields.io/badge/Issues%20closed%20in%20last%2030%20days-4-red?labelColor=555) ![Open issues](https://img.shields.io/badge/Open%20issues-4-blue?labelColor=555)
 
-![Lines added (last 30 days)](https://img.shields.io/badge/Lines%20added%20(last%2030%20days)-69-green?labelColor=555) ![Lines deleted (last 30 days)](https://img.shields.io/badge/Lines%20deleted%20(last%2030%20days)-2-red?labelColor=555) ![Commits in last 30 days](https://img.shields.io/badge/Commits%20in%20last%2030%20days-2-blue?labelColor=555)
+![Lines added (last 30 days)](https://img.shields.io/badge/Lines%20added%20(last%2030%20days)-8789-green?labelColor=555) ![Lines deleted (last 30 days)](https://img.shields.io/badge/Lines%20deleted%20(last%2030%20days)-169007-red?labelColor=555) ![Commits in last 30 days](https://img.shields.io/badge/Commits%20in%20last%2030%20days-7-blue?labelColor=555)
 
 ![Contributors (unique)](https://img.shields.io/badge/Contributors%20(unique)-1-blue?labelColor=555) ![Active contributors (last 30d)](https://img.shields.io/badge/Active%20contributors%20(last%2030d)-1-blue?labelColor=555)
 <!-- end user badges -->
