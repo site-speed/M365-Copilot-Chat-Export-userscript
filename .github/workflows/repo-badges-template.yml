@@ -1,8 +1,8 @@
 name: Update Repo Badges
 
 on:
-  # schedule:
-  #   - cron: '0 7 * * *' # runs daily at 07:00
+  schedule:
+    - cron: '15 8 * * *' # runs daily at 08:15 UTC
   workflow_dispatch:
 
 permissions:
