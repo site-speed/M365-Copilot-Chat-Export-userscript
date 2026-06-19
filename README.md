@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![GitHub Repo stars](https://img.shields.io/github/stars/site-speed/M365-Copilot-Chat-Export-userscript)
 ![Greasy Fork Rating](https://img.shields.io/greasyfork/rating-count/577806)
+![Greasy Fork Downloads](https://img.shields.io/greasyfork/dt/577806)
 <!-- start user badges -->
 ![PRs opened in last 30 days](https://img.shields.io/badge/PRs%20opened%20in%20last%2030%20days-0-green?labelColor=555) ![PRs closed in last 30 days](https://img.shields.io/badge/PRs%20closed%20in%20last%2030%20days-0-red?labelColor=555) ![Open PRs](https://img.shields.io/badge/Open%20PRs-0-blue?labelColor=555)
 
