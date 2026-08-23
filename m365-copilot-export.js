@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version 1.0.40
+// @version 1.0.42
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.40";
+  const SCRIPT_VERSION = "1.0.42";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // --------------------
@@ -477,12 +477,13 @@
       const full = m[1];
       const url = m[2];
       if (prevUrl && url === prevUrl) {
-        lines[i] = lines[i].replace(full, "").replace(/\s+$/, "");
+        const remainder = lines[i].replace(full, "").replace(/\s+$/, "");
+        lines[i] = remainder || null;
       } else {
         prevUrl = url;
       }
     }
-    return lines.filter((l) => l !== "").join("\n");
+    return lines.filter((line) => line !== null).join("\n");
   }
 
   // --------------------
@@ -558,28 +559,34 @@
   function italicizeSystemishOutsideFences(text) {
     if (!text) return text;
 
-    // Convert patterns like **Piecing together repo files**OK, ... into italics with spacing
-    let out = String(text).replace(
-      /\*\*([^*]{3,80})\*\*\s*(?=[A-Z0-9])/g,
-      "*$1* ",
-    );
-
-    const lines = out.split(/\r?\n/);
+    const lines = String(text).split(/\r?\n/);
     const newLines = [];
-    let inFence = false;
+    let fenceMarker = "";
+    let fenceLength = 0;
 
-    for (const line of lines) {
+    for (const originalLine of lines) {
+      const originalTrimmed = originalLine.trim();
+      const fence = originalTrimmed.match(/^(`{3,}|~{3,})/);
+      if (fence) {
+        const marker = fence[1][0];
+        const length = fence[1].length;
+        if (!fenceMarker) {
+          fenceMarker = marker;
+          fenceLength = length;
+        } else if (marker === fenceMarker && length >= fenceLength) {
+          fenceMarker = "";
+          fenceLength = 0;
+        }
+        newLines.push(originalLine);
+        continue;
+      }
+      if (fenceMarker) {
+        newLines.push(originalLine);
+        continue;
+      }
+
+      const line = originalLine.replace(/^([ \t]*)\*\*([^*\r\n]{3,80})\*\*[ \t]*(?=[A-Z0-9])/, "$1*$2* ");
       const trimmed = line.trim();
-      if (trimmed.startsWith("```")) {
-        inFence = !inFence;
-        newLines.push(line);
-        continue;
-      }
-      if (inFence) {
-        newLines.push(line);
-        continue;
-      }
-
       if (!trimmed) {
         newLines.push(line);
         continue;
@@ -721,7 +728,7 @@
       if (!inFence && /^#{1,6}\s+/.test(trimmed) && i + 1 < lines.length && isContinuationCandidate(lines[i + 1])) {
         const currentBody = trimmed.replace(/^#{1,6}\s+/, "");
         const nextTrimmed = lines[i + 1].trim();
-        if (currentBody.length >= 18 && currentBody.length <= 100 && !/[.!?:]$/.test(currentBody)) {
+        if (/^(?:\d{1,3}|[A-Z]{1,2})\)\s+/.test(currentBody) && currentBody.length >= 18 && currentBody.length <= 100 && !/[.!?:]$/.test(currentBody)) {
           out.push(`${trimmed} ${nextTrimmed}`);
           i += 1;
           continue;
@@ -1079,7 +1086,7 @@
     }
 
     for (let i = 0; i < lines.length - 2; i += 1) {
-      const opener = lines[i].trim().match(/^(```+|~~~+)(markdown|md|text)\s*$/i);
+      const opener = lines[i].trim().match(/^(```+|~~~+)(markdown|md)\s*$/i);
       if (!opener) {
         continue;
       }
@@ -3602,6 +3609,61 @@
     return turns;
   }
 
+  function metadataText(value, maxLength = 160) {
+    return String(value ?? "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim().slice(0, maxLength);
+  }
+
+  function conversationTimestampIso(value) {
+    if (value === null || value === undefined || value === "") {
+      return "";
+    }
+    const numeric = Number(value);
+    const normalized = Number.isFinite(numeric) ? (numeric > 0 && numeric < 1000000000000 ? numeric * 1000 : numeric) : value;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+  }
+
+  function conversationSummaryMetadataLines(conversationJson) {
+    const lines = [];
+    const created = conversationTimestampIso(conversationJson?.createTimeUtc);
+    const updated = conversationTimestampIso(conversationJson?.updateTimeUtc);
+    if (created) {
+      lines.push(`- Created: ${created}`);
+    }
+    if (updated) {
+      lines.push(`- Updated: ${updated}`);
+    }
+    if (Array.isArray(conversationJson?.messages)) {
+      lines.push(`- RawMessageRecords: ${conversationJson.messages.length}`);
+    }
+    const tone = metadataText(conversationJson?.tone);
+    if (tone) {
+      lines.push(`- ModelTone: ${tone}`);
+    }
+    const pluginLabels = [];
+    const seenPlugins = new Set();
+    for (const plugin of conversationJson?.plugins || []) {
+      const id = metadataText(plugin?.id || plugin?.name);
+      const source = metadataText(plugin?.source);
+      if (!id) {
+        continue;
+      }
+      const label = source ? `${id} (${source})` : id;
+      if (!seenPlugins.has(label)) {
+        seenPlugins.add(label);
+        pluginLabels.push(label);
+      }
+    }
+    if (pluginLabels.length) {
+      lines.push(`- Plugins: ${pluginLabels.join(", ")}`);
+    }
+    const turnState = metadataText(conversationJson?.turnState);
+    if (turnState && turnState.toLowerCase() !== "completed") {
+      lines.push(`- TurnState: ${turnState}`);
+    }
+    return lines;
+  }
+
   function toMarkdownCardFirst(conversationJson, exportedAt = new Date().toISOString()) {
     const title = conversationJson?.chatName || "M365 Copilot Chat";
     const exported = exportedAt;
@@ -3614,6 +3676,7 @@
     lines.push(`- Exported: ${exported}`);
     lines.push(`- Source: ${srcUrl}`);
     if (conversationJson?.conversationId) lines.push(`- ConversationId: ${conversationJson.conversationId}`);
+    lines.push(...conversationSummaryMetadataLines(conversationJson));
     lines.push(`- ExporterVersion: ${SCRIPT_VERSION}`);
     lines.push("");
     lines.push("---");

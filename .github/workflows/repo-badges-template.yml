@@ -26,7 +26,7 @@ jobs:
           days: '30'
           color: 'blue'
           label_color: '555'
-    
+
       - name: write to job summary
         run: |
           echo "${{ steps.badges.outputs.badges }}" >> $GITHUB_STEP_SUMMARY
