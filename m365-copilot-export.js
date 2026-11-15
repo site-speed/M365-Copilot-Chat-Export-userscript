@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Chat Conversation Exporter
 // @namespace    https://github.com/site-speed/M365-Copilot-Chat-Export-userscript
-// @version 1.0.42
+// @version 1.0.43
 // @description  Export the current Microsoft 365 Copilot Chat conversation to readable Markdown and raw JSON Markdown files.
 // @author       Tim Moss
 // @license      MIT
@@ -9,6 +9,7 @@
 // @supportURL   https://github.com/site-speed/M365-Copilot-Chat-Export-userscript/issues
 // @match        https://m365.cloud.microsoft/chat*
 // @match        https://m365.cloud.microsoft/*/chat*
+// @match        https://copilot.cloud.microsoft/*
 // @match        https://microsoft365.com/chat*
 // @match        https://www.microsoft365.com/chat*
 // @run-at       document-end
@@ -18,7 +19,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT_VERSION = "1.0.42";
+  const SCRIPT_VERSION = "1.0.43";
   const SETTINGS_KEY = "m365ce_export_settings_v9";
 
   // --------------------
@@ -4057,34 +4058,42 @@
     return json;
   }
 
-  function inferConversationIdFromUrl() {
-    const href = location.href;
+  const CONVERSATION_ID_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const CONVERSATION_ID_COMPACT_PATTERN = /^[0-9a-f]{32}$/i;
+  const CONVERSATION_PATH_ID_PATTERN = /(?:^|\/)(?:conversation|chats?)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32})(?=$|[\/?#])/i;
+  const CONVERSATION_ID_QUERY_KEYS = ["conversationid", "chatid", "cid", "id"];
+
+  function isConversationIdValue(value) {
+    const text = String(value ?? "").trim();
+    return CONVERSATION_ID_UUID_PATTERN.test(text) || CONVERSATION_ID_COMPACT_PATTERN.test(text);
+  }
+
+  // Only recognised conversation routes and conversation-specific query
+  // parameters may supply a conversation ID. Scanning the whole URL (or
+  // accepting arbitrary query values such as ?tenantId=) would classify
+  // non-chat pages as exportable and send a wrong ID to Substrate.
+  function inferConversationIdFromUrl(href = location.href) {
+    let url;
     try {
-      const u = new URL(href);
-      const pathConversationMatch = u.pathname.match(
-        /(?:^|\/)conversation\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:$|\/)/,
-      );
-      if (pathConversationMatch) {
-        return pathConversationMatch[1];
-      }
-      for (const key of ["conversationId", "chatId", "cid", "id"]) {
-        const v = u.searchParams.get(key);
-        if (v) {
-          return v;
-        }
-      }
+      url = new URL(String(href || ""));
     } catch {
-      // Fall through to generic legacy matching below.
+      return null;
     }
-    const m1 = href.match(
-      /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/,
-    );
-    if (m1) {
-      return m1[0];
+    const routePaths = [url.pathname];
+    const hashRoute = String(url.hash || "").replace(/^#/, "").split("?")[0];
+    if (hashRoute.startsWith("/")) {
+      routePaths.push(hashRoute);
     }
-    const m2 = href.match(/[0-9a-fA-F]{32}/);
-    if (m2) {
-      return m2[0];
+    for (const routePath of routePaths) {
+      const pathMatch = routePath.match(CONVERSATION_PATH_ID_PATTERN);
+      if (pathMatch) {
+        return pathMatch[1];
+      }
+    }
+    for (const [key, value] of url.searchParams) {
+      if (CONVERSATION_ID_QUERY_KEYS.includes(key.toLowerCase()) && isConversationIdValue(value)) {
+        return value.trim();
+      }
     }
     return null;
   }
@@ -4093,7 +4102,11 @@
   function isSubstrateGetConversationUrl(rawUrl) {
     try {
       const parsedUrl = new URL(String(rawUrl || ""), location.href);
-      return parsedUrl.hostname === "substrate.office.com" && parsedUrl.pathname.includes("GetConversation");
+      const host = parsedUrl.hostname.toLowerCase();
+      // After the copilot.cloud.microsoft redirect, GetConversation can be
+      // proxied through the app's own *.cloud.microsoft host.
+      const knownHost = host === "substrate.office.com" || host === "cloud.microsoft" || host.endsWith(".cloud.microsoft");
+      return knownHost && parsedUrl.pathname.includes("GetConversation");
     } catch {
       return false;
     }
